@@ -1,5 +1,6 @@
 package cz.muni.fi.pb162.hw03.impl;
 
+import cz.muni.fi.pb162.hw03.impl.model.MapModel;
 import cz.muni.fi.pb162.hw03.template.FSTemplateEngine;
 import cz.muni.fi.pb162.hw03.template.model.TemplateModel;
 
@@ -27,6 +28,6 @@ public final class Templates {
      * @return template model
      */
     public static TemplateModel modelOf(Map<String, Object> map) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new MapModel(map);
     }
 }
