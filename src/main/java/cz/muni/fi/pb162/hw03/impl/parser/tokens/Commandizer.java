@@ -84,10 +84,15 @@ public class Commandizer {
                 ifAndForCounter++;
                 commands.add(new Command(Command.Kind.CMDFOR, tokens.subList(index, index + 6)));
                 index = index + 6;
-            } else if (tokens.isEmpty() && doneCounter != ifAndForCounter) {
-                throw new TemplateException("Incorrect pairing of done");
             } else {
                 throw new TemplateException("Unable to parse token sequence into command");
+            }
+        }
+        if (doneCounter != ifAndForCounter){
+            if (doneCounter > ifAndForCounter) {
+                throw new TemplateException("Missing if/for command");
+            } else{
+                throw new TemplateException("Missing done command");
             }
         }
         return commands;

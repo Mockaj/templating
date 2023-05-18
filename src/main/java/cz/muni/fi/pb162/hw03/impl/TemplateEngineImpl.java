@@ -91,7 +91,6 @@ public class TemplateEngineImpl implements TemplateEngine {
         boolean lastIfResult = false;
         while(!(commands.isEmpty())){
             Command firstInLine = commands.get(0);
-            // CMDTEXT
             if (firstInLine.getKind().equals(Command.Kind.CMDTEXT)){
                 result.append(firstInLine.getTokens().get(0).text());
                 commands.remove(0);
@@ -123,7 +122,7 @@ public class TemplateEngineImpl implements TemplateEngine {
         Command firstInLine = commands.get(0);
         Iterable<Object> iterable = model.getAsIterable(firstInLine.getTokens().get(4).name());
         String key = firstInLine.getTokens().get(2).name();
-        int commandsInForLoopCounter = 0; // Because there is the for loop command still
+        int commandsInForLoopCounter = 0;
         for (Command cmd : commands) {
             if (cmd.getKind().equals(Command.Kind.CMDDONE)){
                 break;
