@@ -19,7 +19,7 @@ public final class Templates {
      * @return template engine
      */
     public static FSTemplateEngine engine() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return new FSTemplateEngineImpl();
     }
 
     /**

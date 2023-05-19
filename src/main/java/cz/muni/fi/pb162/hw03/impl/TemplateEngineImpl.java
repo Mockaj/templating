@@ -21,7 +21,7 @@ import java.util.Map;
  * @author Ladislav Husty
  */
 public class TemplateEngineImpl implements TemplateEngine {
-    private final Map<String, String> templates;
+    private final Map<String, String> templates = new HashMap<>();
 
     /**
      *
@@ -29,16 +29,16 @@ public class TemplateEngineImpl implements TemplateEngine {
      * @param text
      */
     public TemplateEngineImpl(String name, String text) {
-        this.templates = new HashMap<>();
         loadTemplate(name, text);
     }
 
     /**
      *
      */
-    public TemplateEngineImpl() {
-        this.templates = new HashMap<>();
+    public TemplateEngineImpl(){
+
     }
+
 
     /**
      * Loads template
@@ -49,7 +49,9 @@ public class TemplateEngineImpl implements TemplateEngine {
      */
     @Override
     public void loadTemplate(String name, String text) {
-        // missing validateTemplate
+        if (!validateTemplate(text)){
+            throw new TemplateException("Template not valid");
+        }
         templates.put(name, text);
     }
 
@@ -70,7 +72,7 @@ public class TemplateEngineImpl implements TemplateEngine {
      * @throws TemplateException if there is no loaded template with given name
      */
     @Override
-    public String evaluateTemplate(String name, TemplateModel model) {
+    public String evaluateTemplate(String name, TemplateModel model) throws TemplateException{
         if (templates.get(name) == null){
             throw new TemplateException("No template found with name: " + name);
         }
@@ -143,5 +145,27 @@ public class TemplateEngineImpl implements TemplateEngine {
             }
         }
         return new StringBuilder(resultCopy);
+    }
+    // There is room for optimization by saving the computed commands for given valid template
+    // and use them for evaluating later on.
+    private boolean validateTemplate(String templateText){
+        Tokenizer tokenizer = new Tokenizer(templateText);
+        List<Token> tokens = new LinkedList<>();
+        while(!tokenizer.done()) {
+            Token token = tokenizer.consume();
+            tokens.add(token);
+        }
+        List<Command> commands = new Commandizer(tokens).getCommands();
+        int ifAndForCounter = 0;
+        int doneCounter = 0;
+        for (Command command : commands){
+            if (command.getKind().equals(Command.Kind.CMDDONE)){
+                doneCounter++;
+            } else if (command.getKind().equals(Command.Kind.CMDIF) ||
+                command.getKind().equals(Command.Kind.CMDFOR)) {
+                ifAndForCounter++;
+            }
+        }
+        return doneCounter == ifAndForCounter;
     }
 }

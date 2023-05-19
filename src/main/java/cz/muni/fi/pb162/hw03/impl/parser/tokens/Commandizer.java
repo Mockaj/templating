@@ -57,8 +57,6 @@ public class Commandizer {
      * @return list of commands
      */
     public List<Command> getCommands() {
-        int ifAndForCounter = 0;
-        int doneCounter = 0;
         List<Command> commands = new LinkedList<>();
         int index = 0;
         while (index < tokens.size()) {
@@ -70,29 +68,19 @@ public class Commandizer {
                 commands.add(new Command(Command.Kind.CMDPRINT, tokens.subList(index, index + 3)));
                 index = index + 3;
             } else if (isIfCmd(index)) {
-                ifAndForCounter++;
                 commands.add(new Command(Command.Kind.CMDIF, tokens.subList(index, index + 4)));
                 index = index + 4;
             } else if (isElseCmd(index)) {
                 commands.add(new Command(Command.Kind.CMDELSE, tokens.subList(index, index + 3)));
                 index = index + 3;
             } else if (isDoneCmd(index)) {
-                doneCounter++;
                 commands.add(new Command(Command.Kind.CMDDONE, tokens.subList(index, index + 3)));
                 index = index + 3;
             } else if (isForCmd(index)) {
-                ifAndForCounter++;
                 commands.add(new Command(Command.Kind.CMDFOR, tokens.subList(index, index + 6)));
                 index = index + 6;
             } else {
                 throw new TemplateException("Unable to parse token sequence into command");
-            }
-        }
-        if (doneCounter != ifAndForCounter){
-            if (doneCounter > ifAndForCounter) {
-                throw new TemplateException("Missing if/for command");
-            } else{
-                throw new TemplateException("Missing done command");
             }
         }
         return commands;

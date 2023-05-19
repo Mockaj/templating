@@ -1,8 +1,10 @@
 package cz.muni.fi.pb162.hw03.impl;
 
 import cz.muni.fi.pb162.hw03.impl.model.MapModel;
-import cz.muni.fi.pb162.hw03.template.TemplateEngine;
+import cz.muni.fi.pb162.hw03.template.FSTemplateEngine;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +68,6 @@ public class Demo {
 //            """;
         Map<String, Object> data;
         MapModel model;
-        TemplateEngine templateEngine;
         data = new HashMap<>();
         data.put("cat", "Tom");
         data.put("mouse", "Jerry");
@@ -76,7 +77,25 @@ public class Demo {
         data.put("surname", "Disney");
         data.put("names", List.of("Butch", "Toodles", "Quacker"));
         model = new MapModel(data);
-        templateEngine = new TemplateEngineImpl(simpleName, forString);
-        System.out.println(templateEngine.evaluateTemplate(simpleName, model));
+        Path examples = Path.of("examples");
+        Path file = examples.resolve("complex.txt.tpl");
+        Path absolutePathFile = file.toAbsolutePath();
+        String fileName = file.getFileName().toString();
+        String templateName = fileName.substring(0, fileName.lastIndexOf("." + "tpl"));
+        Path path1 = Path.of("/Users/mockaj/examples/complex.txt.tpl");
+        Path path2 = Path.of("/Users/mockaj/examples/for.txt.tpl");
+        Path path3 = Path.of("/Users/mockaj/examples/print.txt.tpl");
+        Path pathExamples = Path.of("/Users/mockaj/examples");
+
+        FSTemplateEngine fsTemplateEngine = new FSTemplateEngineImpl();
+//        fsTemplateEngine.loadTemplate(path1, StandardCharsets.UTF_8, "tpl");
+//        fsTemplateEngine.loadTemplate(path2, StandardCharsets.UTF_8, "tpl");
+//        fsTemplateEngine.loadTemplate(path3, StandardCharsets.UTF_8, "tpl");
+        fsTemplateEngine.loadTemplateDir(pathExamples, StandardCharsets.UTF_8, "tpl");
+
+//        templateEngine1.loadTemplate(file, StandardCharsets.UTF_8, "tpl");
+//        System.out.println(templateEngine3.getTemplateNames());
+
+//        System.out.println(templateEngine.evaluateTemplate(simpleName, model));
     }
 }
