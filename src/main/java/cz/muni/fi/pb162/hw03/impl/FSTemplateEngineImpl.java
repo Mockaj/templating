@@ -1,7 +1,6 @@
 package cz.muni.fi.pb162.hw03.impl;
 
 import cz.muni.fi.pb162.hw03.template.FSTemplateEngine;
-import cz.muni.fi.pb162.hw03.template.TemplateEngine;
 import cz.muni.fi.pb162.hw03.template.TemplateException;
 import cz.muni.fi.pb162.hw03.template.model.TemplateModel;
 
@@ -111,8 +110,7 @@ public class FSTemplateEngineImpl extends TemplateEngineImpl implements FSTempla
      */
     @Override
     public void writeTemplates(TemplateModel model, Path outDir, Charset cs) {
-        TemplateEngine templateEngine = new TemplateEngineImpl();
-        Collection<String> templateNames = templateEngine.getTemplateNames();
-        templateNames.forEach(templateName -> writeTemplate(templateName, model, outDir, cs));
+        Collection<String> templateNames = this.getTemplateNames();
+        templateNames.forEach(templateName -> writeTemplate(templateName, model, outDir.resolve(templateName), cs));
     }
 }

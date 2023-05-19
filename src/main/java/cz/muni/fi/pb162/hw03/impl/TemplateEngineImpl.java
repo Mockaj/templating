@@ -136,7 +136,6 @@ public class TemplateEngineImpl implements TemplateEngine {
         Iterator<Object> iterator = iterable.iterator();
         while(iterator.hasNext()) {
             Object item = iterator.next();
-            System.out.println(item);
             resultCopy.append(evaluateCommands(forLoopCommands, model.extended(key, item)));
             if(!(iterator.hasNext())){
                 for (int i = 0; i < commandsInForLoopCounter + 1; i++){
