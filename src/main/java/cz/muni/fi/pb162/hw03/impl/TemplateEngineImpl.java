@@ -83,7 +83,6 @@ public class TemplateEngineImpl implements TemplateEngine {
             tokens.add(token);
         }
         List<Command> commands = new Commandizer(tokens).getCommands();
-
         return evaluateCommands(commands, model);
     }
 
