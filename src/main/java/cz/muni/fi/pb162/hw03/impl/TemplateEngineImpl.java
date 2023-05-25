@@ -1,6 +1,5 @@
 package cz.muni.fi.pb162.hw03.impl;
 
-import cz.muni.fi.pb162.hw03.impl.parser.tokens.Command;
 import cz.muni.fi.pb162.hw03.impl.parser.tokens.Commandizer;
 import cz.muni.fi.pb162.hw03.impl.parser.tokens.Token;
 import cz.muni.fi.pb162.hw03.impl.parser.tokens.Tokenizer;
@@ -8,11 +7,9 @@ import cz.muni.fi.pb162.hw03.template.TemplateEngine;
 import cz.muni.fi.pb162.hw03.template.TemplateException;
 import cz.muni.fi.pb162.hw03.template.model.TemplateModel;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;

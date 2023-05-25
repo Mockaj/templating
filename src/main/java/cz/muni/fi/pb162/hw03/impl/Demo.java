@@ -29,6 +29,19 @@ public class Demo {
                 {{ #done }}
                 Now this will be right under.
                 """;
+
+        String nested = """
+            {{ #if no }}
+            First condition is true.
+            {{ #else }}
+            {{ #if no }}
+            Second condition is true.
+            {{ #else }}
+            Second condition is false.
+            {{ #done }}
+            First condition is false.
+            {{ #done }}
+            """;
         Map<String, Object> model = Map.of("cat", "Tom",
                 "mouse", "Jerry",
                 "yes", true,
