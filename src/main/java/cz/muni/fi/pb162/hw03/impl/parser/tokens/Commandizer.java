@@ -1,5 +1,6 @@
 package cz.muni.fi.pb162.hw03.impl.parser.tokens;
 
+import cz.muni.fi.pb162.hw03.impl.For;
 import cz.muni.fi.pb162.hw03.impl.If;
 import cz.muni.fi.pb162.hw03.impl.Print;
 import cz.muni.fi.pb162.hw03.impl.Template;
@@ -7,6 +8,7 @@ import cz.muni.fi.pb162.hw03.impl.TemplateEvaluable;
 import cz.muni.fi.pb162.hw03.impl.Text;
 import cz.muni.fi.pb162.hw03.template.TemplateException;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,16 +16,22 @@ import java.util.List;
  * @author Ladislav Husty
  */
 public class Commandizer {
-    private List<Token> tokens;
-    private static List<TemplateEvaluable> commands;
+    private final List<Token> tokens;
+    private final List<TemplateEvaluable> commands;
+    public static class CommandManager {
+        private  final List<TemplateEvaluable> commands = new LinkedList<>();
+        public  List<TemplateEvaluable> getCommands() {
+            return commands;
+        }
+    }
 
     /**
      *
-     * @param tokens
+     * @param tokens tokens to be converted to commands
      */
-    public Commandizer(List<Token> tokens){
+    public Commandizer(List<Token> tokens) {
         this.tokens = tokens;
-        this.commands = new LinkedList<>();
+        commands = new CommandManager().getCommands(); // Get the shared commands list
     }
 
     private boolean isText(){
@@ -35,11 +43,7 @@ public class Commandizer {
                 tokens.get(2).getKind().equals(Token.Kind.CLOSE);
     }
     private boolean isIfCmd(){
-        return tokens.get(0).getKind().equals(Token.Kind.OPEN) &&
-                tokens.get(1).getKind().equals(Token.Kind.CMD) &&
-                tokens.get(1).cmd().equals("if") &&
-                tokens.get(2).getKind().equals(Token.Kind.NAME) &&
-                tokens.get(3).getKind().equals(Token.Kind.CLOSE);
+        return isIfCmd(this.tokens);
     }
     private boolean isIfCmd(List<Token> tokens){
         return tokens.get(0).getKind().equals(Token.Kind.OPEN) &&
@@ -49,16 +53,16 @@ public class Commandizer {
                 tokens.get(3).getKind().equals(Token.Kind.CLOSE);
     }
     private boolean isElseCmd(){
-        return tokens.get(0).getKind().equals(Token.Kind.OPEN) &&
-                tokens.get(1).getKind().equals(Token.Kind.CMD) &&
-                tokens.get(1).cmd().equals("else") &&
-                tokens.get(2).getKind().equals(Token.Kind.CLOSE);
+        return isElseCmd(this.tokens);
     }
     private boolean isElseCmd(List<Token> tokens){
         return tokens.get(0).getKind().equals(Token.Kind.OPEN) &&
                 tokens.get(1).getKind().equals(Token.Kind.CMD) &&
                 tokens.get(1).cmd().equals("else") &&
                 tokens.get(2).getKind().equals(Token.Kind.CLOSE);
+    }
+    private boolean isDoneCmd(){
+        return isDoneCmd(tokens);
     }
     private boolean isDoneCmd(List<Token> tokens){
         return tokens.get(0).getKind().equals(Token.Kind.OPEN) &&
@@ -67,99 +71,77 @@ public class Commandizer {
                 tokens.get(2).getKind().equals(Token.Kind.CLOSE);
     }
 
-    private boolean isForCmd(int index){
-        return tokens.get(index).getKind().equals(Token.Kind.OPEN) &&
-                tokens.get(index+1).getKind().equals(Token.Kind.CMD) &&
-                tokens.get(index+2).getKind().equals(Token.Kind.NAME) &&
-                tokens.get(index+3).getKind().equals(Token.Kind.IN) &&
-                tokens.get(index+4).getKind().equals(Token.Kind.NAME) &&
-                tokens.get(index+5).getKind().equals(Token.Kind.CLOSE);
+    private boolean isForCmd(){
+        return isForCmd(tokens);
+    }
+    private boolean isForCmd(List<Token> tokens){
+        return tokens.get(0).getKind().equals(Token.Kind.OPEN) &&
+                tokens.get(1).getKind().equals(Token.Kind.CMD) &&
+                tokens.get(2).getKind().equals(Token.Kind.NAME) &&
+                tokens.get(3).getKind().equals(Token.Kind.IN) &&
+                tokens.get(4).getKind().equals(Token.Kind.NAME) &&
+                tokens.get(5).getKind().equals(Token.Kind.CLOSE);
     }
 
 
-    private List<Template> getIfBlock(List<Token> tokens) {
+    private TemplateEvaluable[] getIfBlock(List<Token> tokens){
+        boolean hasPairedDones = false;
         int nestingCount = 0;
-        int endOfIfElseBlockIndex = 0;
-        List<Token> ifElseBlockTokens = new LinkedList<>();
-
-        for (int i = 4; i < tokens.size(); i++) {
-            Token currToken = tokens.get(i);
-            if (currToken.getKind().equals(Token.Kind.CMD)) {
-                if (currToken.cmd().equals("if")) {
-                    nestingCount++;
-                } else if (currToken.cmd().equals("done")) {
-                    if (nestingCount == 0) {
-                        endOfIfElseBlockIndex = i+1;
-                        ifElseBlockTokens.addAll(tokens.subList(0, endOfIfElseBlockIndex+1));
-                        break;
-                    } else {
-                        nestingCount--;
-                    }
+        int elseIndex = 0;
+        int doneIndex = 0;
+        for (int i = 4; i < tokens.size(); i++){
+            List<Token> remainingTokens = tokens.subList(i, tokens.size());
+            if (isIfCmd(remainingTokens)){
+                nestingCount++;
+            } else if (isElseCmd(remainingTokens) && nestingCount == 0) {
+                elseIndex = i;
+            } else if (isDoneCmd(remainingTokens)) {
+                if (nestingCount != 0){
+                    nestingCount--;
+                } else{
+                    hasPairedDones = true;
+                    doneIndex = i;
+                    break;
                 }
             }
         }
-        nestingCount = 0;
-        int elseIndex = 0;
-        for (int i=4; i<ifElseBlockTokens.size(); i++){
-            List<Token> remainingBlockTokens = ifElseBlockTokens.subList(i, ifElseBlockTokens.size());
-            if (isIfCmd(remainingBlockTokens)){
-                nestingCount++;
-            }
-            if (isDoneCmd(remainingBlockTokens) &&
-            nestingCount != 0){
-                nestingCount--;
-            }
-            if (isElseCmd(remainingBlockTokens) &&
-            nestingCount == 0){
-                elseIndex = i;
-            }
+        if (!hasPairedDones){
+            throw new TemplateException("Missing done statement");
         }
-        List<Token> ifBlockTokens = new LinkedList<>();
-        List<Token> elseBlockTokens = new LinkedList<>();
-        Commandizer commandizerElseBlock = null;
-        Template templateElseBlock = null;
-        if (elseIndex != 0){
-            ifBlockTokens = new LinkedList<>(ifElseBlockTokens.subList(4, elseIndex));
-            elseBlockTokens = new LinkedList<>(
-                    ifElseBlockTokens.subList(elseIndex+3,
-                            ifElseBlockTokens.size()));
-            templateElseBlock = new Template(new Commandizer(elseBlockTokens).getCommands());
-        }
-        else{
-            ifBlockTokens = new LinkedList<>(ifElseBlockTokens.subList(4, ifElseBlockTokens.size()));
-        }
-        Commandizer commandizerIfBlock = new Commandizer(ifBlockTokens);
-        this.consume(ifElseBlockTokens.size());
-        List<Template> result = new LinkedList<>();
-        var templateIfBlock = new Template(commandizerIfBlock.getCommands());
-        result.add(templateIfBlock);
-        result.add(templateElseBlock);
+        elseIndex = elseIndex == 0 ? doneIndex : elseIndex;
+        List<Token> ifBlockTokens = new ArrayList<>(tokens.subList(4, elseIndex));
+        TemplateEvaluable ifTemplate = new Template(new Commandizer(ifBlockTokens).getCommands());
+        TemplateEvaluable elseTemplate = elseIndex == doneIndex ? null :
+                new Template((
+                        new Commandizer(
+                                new ArrayList<>(tokens.subList(elseIndex+3, doneIndex)))).getCommands());
+        TemplateEvaluable[] result = new TemplateEvaluable[] {ifTemplate, elseTemplate};
+        this.consume(doneIndex);
         return result;
     }
-
-//    private TemplateEvaluable getElseBlock(List<Token> tokens) {
-//        int nestingCount = 0;
-//        int endOfElseBlockIndex = 0;
-//        if (isElseCmd()){
-//                for (int i = 3; i < tokens.size(); i++){
-//                    Token currToken = tokens.get(i);
-//                    if (currToken.getKind().equals(Token.Kind.CMD)){
-//                        if(currToken.cmd().equals("if")){
-//                            nestingCount++;
-//                        } else if ((currToken.cmd().equals("done") && nestingCount == 0) ){
-//                            endOfElseBlockIndex = i+1;
-//                        } else if (currToken.cmd().equals("done") && nestingCount != 0 ){
-//                            nestingCount--;
-//                        }
-//                    }
-//                }
-//            Commandizer commandizer = new Commandizer(tokens.subList(4, endOfElseBlockIndex));
-//            this.consume(endOfElseBlockIndex+1);
-//            return new Template(commandizer.getCommands());
-//        } else{
-//            return null;
-//        }
-//    }
+    private TemplateEvaluable getForBlock(List<Token> tokens){
+        int doneIndex = 0;
+        int nestingCount = 0;
+        for (int i = 6; i<tokens.size(); i++){
+            List<Token> remainingTokens = tokens.subList(i, tokens.size());
+            if (isForCmd(remainingTokens) || isIfCmd(remainingTokens)){
+                nestingCount++;
+            } else if(isDoneCmd() && nestingCount != 0){
+                nestingCount--;
+            } else if (isDoneCmd(remainingTokens) && nestingCount == 0){
+                doneIndex = i;
+                break;
+            }
+        }
+        if (doneIndex == 0){
+            throw new TemplateException("Done not found in for block");
+        }
+        TemplateEvaluable forBlock = new Template((
+                new Commandizer(
+                        new ArrayList<>(tokens.subList(6, doneIndex)))).getCommands());
+        this.consume(doneIndex);
+        return forBlock;
+    }
 
     private void consume(){
         tokens.remove(0);
@@ -167,13 +149,15 @@ public class Commandizer {
     private void consume(int numberOfTokensToConsume){
         tokens.subList(0, numberOfTokensToConsume).clear();
     }
+
+    /**
+     * Checks if tokens variable contains at least one token
+     * @return boolean
+     */
     public boolean containsTokens() {
         return !(tokens.isEmpty());
     }
 
-//    public void updateTokens(List<Token> tokens){
-//        this.tokens = new LinkedList<>(tokens);
-//    }
 
     /**
      *
@@ -189,24 +173,22 @@ public class Commandizer {
                 this.consume(3);
             } else if (isIfCmd()) {
                 String variable = tokens.get(2).name();
-                List<Template> ifElseBlock = getIfBlock(tokens);
-                TemplateEvaluable ifBlock = ifElseBlock.get(0);
-                TemplateEvaluable elseBlock = ifElseBlock.get(1);
+                TemplateEvaluable[] ifElseBlock = getIfBlock(tokens);
+                TemplateEvaluable ifBlock = ifElseBlock[0];
+                TemplateEvaluable elseBlock = ifElseBlock[1];
                 commands.add(new If(variable, ifBlock,  elseBlock) );
-            } else if (isDoneCmd(tokens)){
+            } else if (isForCmd()) {
+                var iterated = tokens.get(2).name();
+                var iterable = tokens.get(4).name();
+                TemplateEvaluable forBlock = getForBlock(tokens);
+                commands.add((new For(iterated, iterable, forBlock)));
+            } else if (isDoneCmd()){
                 this.consume(3);
-            }
-//            else if (isForCmd(index)) {
-//                commands.add(new Command(Command.Kind.CMDFOR, tokens.subList(index, index + 6)));
-//                index = index + 6;
-//            }
-            else {
+            } else {
                 throw new TemplateException("Unable to parse token sequence into command");
             }
         }
         return commands;
     }
-
-
-
 }
+
